@@ -8,7 +8,7 @@ class Todo(models.Model):
     ]
     title = models.CharField( max_length=200)
     description = models.TextField(blank = True)
-    due_date = models.DateTimeField()
+    due_date = models.DateTimeField(null = True, blank = True)
     priority = models.CharField(
     max_length=1,
     choices=PRIORITY_CHOICES,

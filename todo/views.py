@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Todo
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 def todo_list(request):
     todos = Todo.objects.all().order_by('-id')
@@ -11,6 +13,12 @@ def todo_list(request):
             description = request.POST.get("description")
             due_date = request.POST.get("due_date")
             priority = request.POST.get("priority")
+
+            if due_date:
+                due_date = parse_datetime(due_date)
+            else:
+                due_date =timezone.now()
+
 
             if title:
                 Todo.objects.create(
@@ -28,6 +36,12 @@ def todo_list(request):
             todo.title = request.POST.get("title")
             todo.description = request.POST.get("description")
             todo.due_date = request.POST.get("due_date") or None
+
+            if due_date:
+                due_date = parse_datetime(due_date)
+            else:
+                due_date =timezone.now()
+                
             todo.priority = request.POST.get("priority")
             todo.completed = True if request.POST.get("completed") == "on" else False
 

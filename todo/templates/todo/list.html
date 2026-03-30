@@ -3,6 +3,8 @@
 <html>
 <head>
     <title>Todo App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">   
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -25,8 +27,8 @@
         <input class="input-group" class="todo-input" type="datetime-local" name="due_date">
 
         <select class="input-group" class="todo-input" name="priority">
-        <option value="L">Low</option>
-        <option value="M" selected>Medium</option>
+        <option value="L">Low </option>
+        <option value="M" selected>Medium </option>
         <option value="H">High</option>
     </select>
 </div>
@@ -49,7 +51,7 @@
 
         <p>{{ todo.description }}</p>
 
-        <small>
+        <small class="priority-{{ todo.priority }}">
             Due: {{ todo.due_date|default:"No date" }} |
             Priority: {{ todo.get_priority_display }}
         </small>
@@ -74,16 +76,18 @@
         <select name="priority">
             <option value="L" {% if todo.priority == 'L' %}selected{% endif %}>Low</option>
             <option value="M" {% if todo.priority == 'M' %}selected{% endif %}>Medium</option>
-            <option value="H" {% if todo.priority == 'H' %}selected{% endif %}>High</option>
+            <option value="H" {% if todo.priority == 'H' %}selected{% endif %}>High </option>
         </select>
-
+        
         <label>
             Done:
             <input type="checkbox" name="completed" {% if todo.completed %}checked{% endif %}>
         </label>
 
         <button type="submit" name="edit_task" class="btn btn-save">✔</button>
+        
     </form>
+
 
     <!-- BUTTONS -->
     <div class="btn-group">
@@ -126,8 +130,18 @@
 
 <script>
 function enableEdit(id) {
-    document.getElementById("text-" + id).style.display = "none";
-    document.getElementById("edit-" + id).style.display = "flex";
+    const text = document.getElementById("text-" + id);
+    const form = document.getElementById("edit-" + id);
+
+    text.style.opacity = "0";
+    setTimeout(() => {
+        text.style.display = "none";
+        form.style.display = "flex";
+        form.style.opacity = "0";
+        setTimeout(() => {
+            form.style.opacity = "1";
+        }, 50);
+    }, 150);
 }
 </script>
 
