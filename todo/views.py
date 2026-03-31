@@ -2,9 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Todo
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 
+
+@login_required
 def todo_list(request):
-    todos = Todo.objects.all().order_by('-id')
+    todos = Todo.objects.filter(user=request.user).order_by('-id')
 
     if request.method == "POST":
 
@@ -22,6 +26,7 @@ def todo_list(request):
 
             if title:
                 Todo.objects.create(
+                    user=request.user,
                     title=title,
                     description=description,
                     due_date=due_date if due_date else None,
