@@ -51,7 +51,7 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            messages.success(request, f"Welcome back, {user.username} ")
+            #messages.success(request, f"Welcome back, {user.username} ")
             return redirect('todo_list')
         else:
             messages.error(request, "Invalid credentials")
@@ -62,7 +62,8 @@ def login_view(request):
 
 # logout logic
 def logout_view(request):
-    logout(request)
-    messages.success(request, "Logged out successfully")
+    if request.method == "POST":
+        logout(request)
+        messages.success(request, "Logged out successfully")
 
-    return redirect('login')
+        return redirect('login')
