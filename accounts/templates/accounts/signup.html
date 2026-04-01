@@ -13,7 +13,13 @@
 
     {% if messages %}
         {% for message in messages %}
-            <p class="error-text">{{ message }}</p>
+            <p class="
+                {% if message.tags == 'error' %}error-text
+                {% elif message.tags == 'success' %}success-text
+                {% endif %}
+            ">
+                {{ message }}
+            </p>
         {% endfor %}
     {% endif %}
 

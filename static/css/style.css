@@ -425,3 +425,15 @@ input[type="checkbox"]:checked {
 .toggle-password:hover {
     color: #111;
 }
+/* SUCCESS TEXT */
+.success-text {
+    color: #2f9e44;
+    background: #ebfbee;
+    animation: fadeSlideIn 0.3s ease;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 10px;
+    text-align: center;
+    border: 1px solid #b2f2bb;
+}
