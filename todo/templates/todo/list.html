@@ -14,6 +14,55 @@
 <div class="todo-container" style="margin-top: 80px;">
     <h2>Todo App</h2>
 
+    <!-- FILTER + SEARCH -->
+    <form method="GET" class="filter-bar">
+
+        <!-- Search -->
+        <div class="search-group">
+            <input type="text"
+                name="search"
+                placeholder="Search tasks..."
+                value="{{ request.GET.search }}">
+
+            <button type="submit" class="search-btn">search</button>
+        </div>
+
+        <!-- Priority -->
+        <select name="priority">
+            <option value="">All Priority</option>
+            <option value="L" {% if request.GET.priority == "L" %}selected{% endif %}>Low</option>
+            <option value="M" {% if request.GET.priority == "M" %}selected{% endif %}>Medium</option>
+            <option value="H" {% if request.GET.priority == "H" %}selected{% endif %}>High</option>
+        </select>
+
+        <!-- Status -->
+        <select name="status">
+            <option value="">All Status</option>
+            <option value="pending" {% if request.GET.status == "pending" %}selected{% endif %}>Pending</option>
+            <option value="completed" {% if request.GET.status == "completed" %}selected{% endif %}>Completed</option>
+        </select>
+
+        <!-- Sort -->
+        <select name="sort">
+            <option value="">Sort By</option>
+            <option value="due_date" {% if request.GET.sort == "due_date" %}selected{% endif %}>Due Date ↑</option>
+            <option value="-due_date" {% if request.GET.sort == "-due_date" %}selected{% endif %}>Due Date ↓</option>
+        </select>
+
+        <!-- Overdue -->
+        <label style="display:flex; align-items:center; gap:5px;">
+            Overdue
+            <input type="checkbox"
+                name="overdue"
+                value="true"
+                {% if request.GET.overdue == "true" %}checked{% endif %}>
+            
+        </label>
+
+        <button type="submit" class="btn">Apply</button>
+
+    </form>
+
     <!-- ADD TASK -->
     <form method="POST">
     {% csrf_token %}
