@@ -1,15 +1,33 @@
-{% load static %}
+{% load static %} 
 <!DOCTYPE html>
 <html>
 <head>
     <title>Todo App</title>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">   
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
+
+<!-- navigation bar -->
+<nav class="navbar">
+    <div class="nav-left">
+        <h3>Todo App</h3>
+    </div>
+
+    <div class="nav-right">
+        <span class="user-name">Hi, {{ request.user.username }}</span>
+
+        <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    </div>
+</nav>
 
 <div class="todo-container" style="margin-top: 80px;">
     <h2>Todo App</h2>
@@ -17,17 +35,11 @@
     <!-- FILTER + SEARCH -->
     <form method="GET" class="filter-bar">
 
-        <!-- Search -->
         <div class="search-group">
-            <input type="text"
-                name="search"
-                placeholder="Search tasks..."
-                value="{{ request.GET.search }}">
-
+            <input type="text" name="search" placeholder="Search tasks..." value="{{ request.GET.search }}">
             <button type="submit" class="search-btn">search</button>
         </div>
 
-        <!-- Priority -->
         <select name="priority">
             <option value="">All Priority</option>
             <option value="L" {% if request.GET.priority == "L" %}selected{% endif %}>Low</option>
@@ -35,132 +47,149 @@
             <option value="H" {% if request.GET.priority == "H" %}selected{% endif %}>High</option>
         </select>
 
-        <!-- Status -->
         <select name="status">
             <option value="">All Status</option>
             <option value="pending" {% if request.GET.status == "pending" %}selected{% endif %}>Pending</option>
             <option value="completed" {% if request.GET.status == "completed" %}selected{% endif %}>Completed</option>
         </select>
 
-        <!-- Sort -->
         <select name="sort">
             <option value="">Sort By</option>
             <option value="due_date" {% if request.GET.sort == "due_date" %}selected{% endif %}>Due Date ↑</option>
             <option value="-due_date" {% if request.GET.sort == "-due_date" %}selected{% endif %}>Due Date ↓</option>
         </select>
 
-        <!-- Overdue -->
+        <!-- CATEGORY FILTER -->
+        <select name="category">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat.id }}"
+                    {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>
+                    {{ cat.name }}
+                </option>
+            {% endfor %}
+        </select>
+
         <label style="display:flex; align-items:center; gap:5px;">
             Overdue
-            <input type="checkbox"
-                name="overdue"
-                value="true"
+            <input type="checkbox" name="overdue" value="true"
                 {% if request.GET.overdue == "true" %}checked{% endif %}>
-            
         </label>
 
         <button type="submit" class="btn">Apply</button>
+    </form>
 
+    <!-- ADD CATEGORY -->
+    <form method="POST" style="margin-bottom: 10px;">
+        {% csrf_token %}
+        <input type="text" name="new_category" placeholder="Add new category">
+        <button type="submit" name="add_category" class="btn">Add Category</button>
     </form>
 
     <!-- ADD TASK -->
     <form method="POST">
-    {% csrf_token %}
-    <div class="input-group">
-        <input type="text" name="title" placeholder="Add your new task" required>
-        <button type="submit" name="add_task" class="add-btn">+</button>
-    </div>
-    <div class= "todobiggroup">
-        <textarea class="input-group" class="todo-input" name="description" placeholder="Description"></textarea>
+        {% csrf_token %}
 
-        <input class="input-group" class="todo-input" type="datetime-local" name="due_date">
+        <div class="input-group">
+            <input type="text" name="title" placeholder="Add your new task" required>
+            <button type="submit" name="add_task" class="add-btn">+</button>
+        </div>
 
-        <select class="input-group" class="todo-input" name="priority">
-        <option value="L">Low </option>
-        <option value="M" selected>Medium </option>
-        <option value="H">High</option>
-    </select>
-</div>
+        <div class="todobiggroup">
+
+            <textarea class="input-group todo-input" name="description" placeholder="Description"></textarea>
+
+            <input class="input-group todo-input" type="datetime-local" name="due_date">
+
+            <select class="input-group todo-input" name="priority">
+                <option value="L">Low</option>
+                <option value="M" selected>Medium</option>
+                <option value="H">High</option>
+            </select>
+
+            <!--CATEGORY DROPDOWN -->
+            <select class="input-group todo-input" name="category">
+                <option value="">Select Category</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+
+        </div>
     </form>
 
     <!-- TASK LIST -->
     {% for todo in todos %}
-<div class="task">
+    <div class="task">
 
-    <!-- NORMAL VIEW -->
-    <div id="text-{{ todo.id }}" class="task-text">
+        <div id="text-{{ todo.id }}" class="task-text">
+            <strong>
+                {% if todo.completed %}
+                    <s>{{ todo.title }}</s>
+                {% else %}
+                    {{ todo.title }}
+                {% endif %}
+            </strong>
 
-        <strong>
-            {% if todo.completed %}
-                <s>{{ todo.title }}</s>
-            {% else %}
-                {{ todo.title }}
-            {% endif %}
-        </strong>
+            <p>{{ todo.description }}</p>
 
-        <p>{{ todo.description }}</p>
+            <small class="priority-{{ todo.priority }}">
+                Due date: {{ todo.due_date|default:"No date" }} |
+                Priority: {{ todo.get_priority_display }} |
+                Category: {{ todo.category.name|default:"None" }}
+            </small>
+        </div>
 
-        <small class="priority-{{ todo.priority }}">
-            Due date: {{ todo.due_date|default:"No date" }} |
-            Priority: {{ todo.get_priority_display }}
-        </small>
-    </div>
-
-    <!-- EDIT MODE -->
-    <form method="POST"
-          id="edit-{{ todo.id }}"
-          class="edit-form"
-          style="display:none;">
-        {% csrf_token %}
-        <input type="hidden" name="task_id" value="{{ todo.id }}">
-
-        <input type="text" name="title" value="{{ todo.title }}" required>
-
-        <textarea name="description">{{ todo.description }}</textarea>
-
-        <input type="datetime-local"
-               name="due_date"
-               value="{{ todo.due_date|date:'Y-m-d\\TH:i' }}">
-
-        <select name="priority">
-            <option value="L" {% if todo.priority == 'L' %}selected{% endif %}>Low</option>
-            <option value="M" {% if todo.priority == 'M' %}selected{% endif %}>Medium</option>
-            <option value="H" {% if todo.priority == 'H' %}selected{% endif %}>High </option>
-        </select>
-        
-        <label>
-            Done:
-            <input type="checkbox" name="completed" {% if todo.completed %}checked{% endif %}>
-        </label>
-
-        <button type="submit" name="edit_task" class="btn btn-save">✔</button>
-        
-    </form>
-
-
-    <!-- BUTTONS -->
-    <div class="btn-group">
-
-        <button type="button"
-                onclick="enableEdit({{ todo.id }})"
-                class="btn btn-edit">
-            ✏
-        </button>
-
-        <form method="POST">
+        <!-- EDIT FORM -->
+        <form method="POST" id="edit-{{ todo.id }}" class="edit-form" style="display:none;">
             {% csrf_token %}
             <input type="hidden" name="task_id" value="{{ todo.id }}">
-            <button type="submit"
-                    name="delete_task"
-                    class="btn btn-delete">
-                🗑
-            </button>
+
+            <input type="text" name="title" value="{{ todo.title }}" required>
+            <textarea name="description">{{ todo.description }}</textarea>
+
+            <input type="datetime-local" name="due_date"
+                value="{{ todo.due_date|date:'Y-m-d\\TH:i' }}">
+
+            <select name="priority">
+                <option value="L" {% if todo.priority == 'L' %}selected{% endif %}>Low</option>
+                <option value="M" {% if todo.priority == 'M' %}selected{% endif %}>Medium</option>
+                <option value="H" {% if todo.priority == 'H' %}selected{% endif %}>High</option>
+            </select>
+
+            <!-- ADD CATEGORY IN EDIT -->
+            <select name="category">
+                <option value="">None</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}"
+                        {% if todo.category and todo.category.id == cat.id %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label>
+                Done:
+                <input type="checkbox" name="completed" {% if todo.completed %}checked{% endif %}>
+            </label>
+
+            <button type="submit" name="edit_task" class="btn btn-save">✔</button>
         </form>
 
-    </div>
+        <!-- BUTTONS -->
+        <div class="btn-group">
 
-</div>
-{% endfor %}
+            <button type="button" onclick="enableEdit({{ todo.id }})" class="btn btn-edit">✏</button>
+
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="task_id" value="{{ todo.id }}">
+                <button type="submit" name="delete_task" class="btn btn-delete">🗑</button>
+            </form>
+
+        </div>
+    </div>
+    {% endfor %}
 
     <!-- FOOTER -->
     <div class="footer">
@@ -168,9 +197,7 @@
 
         <form method="POST">
             {% csrf_token %}
-            <button type="submit"
-                    name="clear_all"
-                    class="clear-btn">
+            <button type="submit" name="clear_all" class="clear-btn">
                 Clear All
             </button>
         </form>
@@ -195,20 +222,4 @@ function enableEdit(id) {
 </script>
 
 </body>
-
-<!-- navigation bar -->
-<nav class="navbar">
-    <div class="nav-left">
-        <h3>Todo App</h3>
-    </div>
-
-    <div class="nav-right">
-        <span class="user-name">Hi, {{ request.user.username }}</span>
-
-        <form method="POST" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
-    </div>
-</nav>
 </html>
