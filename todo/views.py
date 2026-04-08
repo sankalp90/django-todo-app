@@ -164,7 +164,7 @@ def dashboard(request):
     # Completion rate
     completion_rate = (completed / total * 100) if total > 0 else 0
 
-    # 🔥 Tasks Due Today
+    #  Tasks Due Today
     due_today = todos.filter(
         due_date__date=now.date(),
         completed=False
