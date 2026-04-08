@@ -16,7 +16,7 @@
 <!-- navigation bar -->
 <nav class="navbar">
     <div class="nav-left">
-        <h3>Todo App</h3>
+        <h3 style="text-align: center;">Todo App</h3>
     </div>
 
     <div class="nav-right">
@@ -30,7 +30,10 @@
 </nav>
 
 <div class="todo-container" style="margin-top: 80px;">
-    <h2>Todo App</h2>
+    <h2 >Todo App</h2>
+    <br>
+    <h3>Filter task</h3>
+    <br>
 
     <!-- FILTER + SEARCH -->
     <form method="GET" class="filter-bar">
@@ -39,7 +42,7 @@
             <input type="text" name="search" placeholder="Search tasks..." value="{{ request.GET.search }}">
             <button type="submit" class="search-btn">search</button>
         </div>
-
+        
         <select name="priority">
             <option value="">All Priority</option>
             <option value="L" {% if request.GET.priority == "L" %}selected{% endif %}>Low</option>
@@ -59,6 +62,7 @@
             <option value="-due_date" {% if request.GET.sort == "-due_date" %}selected{% endif %}>Due Date ↓</option>
         </select>
 
+        
         <!-- CATEGORY FILTER -->
         <select name="category">
             <option value="">All Categories</option>
@@ -86,6 +90,9 @@
         <button type="submit" name="add_category" class="btn">Add Category</button>
     </form>
 
+    <br>
+    <h3>Create task</h3>
+    <br>
     <!-- ADD TASK -->
     <form method="POST">
         {% csrf_token %}
@@ -99,7 +106,7 @@
 
             <textarea class="input-group todo-input" name="description" placeholder="Description"></textarea>
 
-            <input class="input-group todo-input" type="datetime-local" name="due_date">
+            <input class="input-group todo-input" type="datetime-local" placeholder="Due Date" name="due_date">
 
             <select class="input-group todo-input" name="priority">
                 <option value="L">Low</option>
@@ -117,6 +124,9 @@
 
         </div>
     </form>
+
+    <h3>Task list</h3>
+    <br>
 
     <!-- TASK LIST -->
     {% for todo in todos %}
@@ -185,6 +195,13 @@
                 {% csrf_token %}
                 <input type="hidden" name="task_id" value="{{ todo.id }}">
                 <button type="submit" name="delete_task" class="btn btn-delete">🗑</button>
+            </form>
+
+            <form method="POST" action="{% url 'toggle_complete' todo.id %}">
+                {% csrf_token %}
+                <button type="submit">
+                    {% if todo.completed %}Undo{% else %}Complete{% endif %}
+                </button>
             </form>
 
         </div>

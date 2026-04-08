@@ -3,7 +3,10 @@ from .models import Todo, Category
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.shortcuts import render
+from datetime import timedelta 
+from django.db.models.functions import TruncDate 
 
 
 @login_required
@@ -69,7 +72,7 @@ def todo_list(request):
             todo.due_date = parse_datetime(due_date) if due_date else None
 
             todo.priority = request.POST.get("priority")
-            todo.completed = True if request.POST.get("completed") == "on" else False
+            #todo.completed = True if request.POST.get("completed") == "on" 
 
             todo.save()
             return redirect("todo_list")
@@ -90,6 +93,13 @@ def todo_list(request):
         "task_count": todos.count(),
         "categories": Category.objects.filter(user=request.user)
     })
+
+@login_required
+def toggle_complete(request, task_id):
+    todo = get_object_or_404(Todo, id=task_id, user=request.user)
+    todo.completed = not todo.completed
+    todo.save()
+    return redirect("todo_list")  
 
 
 def filter_todos(request, queryset):
@@ -132,3 +142,114 @@ def filter_todos(request, queryset):
         queryset = queryset.order_by("-id")
 
     return queryset
+
+@login_required
+def dashboard(request):
+    user = request.user
+    todos = Todo.objects.filter(user=user)
+
+    total = todos.count()
+    completed = todos.filter(completed=True).count()
+    pending = todos.filter(completed=False).count()
+
+    last_7_days = timezone.now() - timedelta(days=7)
+
+    now = timezone.now()
+    
+    overdue = todos.filter(
+        completed=False,
+        due_date__lt=timezone.now()
+    ).count()
+
+    # Completion rate
+    completion_rate = (completed / total * 100) if total > 0 else 0
+
+    # 🔥 Tasks Due Today
+    due_today = todos.filter(
+        due_date__date=now.date(),
+        completed=False
+    ).count()
+
+    #  Tasks Due This Week
+    next_7_days = now + timedelta(days=7)
+
+    due_this_week = todos.filter(
+        due_date__range=(now, next_7_days),
+        completed=False
+    ).count()
+
+    #  High Priority Pending
+    high_priority_pending = todos.filter(
+        priority='H',
+        completed=False
+    ).count()
+
+    #  Weekly Comparison
+    this_week = todos.filter(
+        created_at__gte=now - timedelta(days=7)
+    ).count()
+
+    last_week = todos.filter(
+        created_at__gte=now - timedelta(days=14),
+        created_at__lt=now - timedelta(days=7)
+    ).count()
+
+    #  Top Category
+    top_category = (
+        todos.values('category__name')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+        .first()
+    )
+
+    tasks_over_time = (
+        todos.annotate(date=TruncDate('created_at'))
+        .values('date')
+        .annotate(count=Count('id'))
+        .order_by('date')
+    )
+
+    # Tasks completed today
+    today_completed = todos.filter(
+        completed=True,
+        #created_at__date=timezone.now().date()
+    ).count()
+
+    # Upcoming tasks
+    upcoming = todos.filter(
+        completed=False,
+        due_date__gte=timezone.now()
+    ).order_by('due_date')[:5]
+
+    # Category chart
+    category_data = list(
+        todos.values('category__name')
+        .annotate(count=Count('id'))
+    )
+
+    # Priority chart
+    priority_data = list(
+        todos.values('priority')
+        .annotate(count=Count('id'))
+    )
+
+    context = {
+        'total': total,
+        'completed': completed,
+        'pending': pending,
+        'overdue': overdue,
+        'completion_rate': round(completion_rate, 2),
+        'today_completed': today_completed,
+        'due_today': due_today,
+        'due_this_week': due_this_week,
+        'high_priority_pending': high_priority_pending,
+        'this_week': this_week,
+        'last_week': last_week,
+        'top_category': top_category,
+        'upcoming': upcoming,
+        'category_data': category_data,
+        'priority_data': priority_data,
+        'tasks_over_time': list(tasks_over_time),
+    }
+
+    return render(request, 'dashboard.html', context)
