@@ -11,6 +11,7 @@
 
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <body>
 
 <!-- navigation bar -->
@@ -18,6 +19,8 @@
     <div class="nav-left">
         <h3 style="text-align: center;">Todo App</h3>
     </div>
+
+    <a href="{% url 'dashboard' %}"class="dashboard-btn">Dashboard</a>
 
     <div class="nav-right">
         <span class="user-name">Hi, {{ request.user.username }}</span>
@@ -105,8 +108,14 @@
         <div class="todobiggroup">
 
             <textarea class="input-group todo-input" name="description" placeholder="Description"></textarea>
-
-            <input class="input-group todo-input" type="datetime-local" placeholder="Due Date" name="due_date">
+            
+            <input 
+                class="input-group todo-input"
+                type="text" 
+                placeholder="Due Date"
+                onfocus="this.type='datetime-local'" 
+                onblur="if(!this.value)this.type='text'"
+                >
 
             <select class="input-group todo-input" name="priority">
                 <option value="L">Low</option>
@@ -197,10 +206,13 @@
                 <button type="submit" name="delete_task" class="btn btn-delete">🗑</button>
             </form>
 
-            <form method="POST" action="{% url 'toggle_complete' todo.id %}">
+            <form method="POST" action="{% url 'toggle_complete' todo.id %}"
+            onsubmit="handleComplete(event)"
+            data-completed="{{ todo.completed|yesno:'true,false' }}">
+
                 {% csrf_token %}
-                <button type="submit">
-                    {% if todo.completed %}Undo{% else %}Complete{% endif %}
+                <button type="submit" name="completed_task" class="btn btn-completed">
+                    {% if todo.completed %}↩{% else %}✔{% endif %}
                 </button>
             </form>
 
@@ -235,6 +247,29 @@ function enableEdit(id) {
             form.style.opacity = "1";
         }, 50);
     }, 150);
+}
+
+function handleComplete(event) {
+    const form = event.target;
+    const isCompleted = form.dataset.completed === "true";
+
+    // Only fire when marking as complete (NOT undo)
+    if (!isCompleted) {
+        const btn = form.querySelector("button");
+        const rect = btn.getBoundingClientRect();
+
+        confetti({
+            particleCount: 180,
+            spread: 160,
+            origin: {
+                x: (rect.left + rect.width / 2) / window.innerWidth,
+                y: (rect.top + rect.height / 2) / window.innerHeight
+            }
+        });
+
+        event.preventDefault();
+        setTimeout(() => form.submit(), 300);
+    }
 }
 </script>
 

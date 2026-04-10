@@ -1,62 +1,57 @@
-{% load static %} 
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Dashboard</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        body { font-family: Arial; padding: 20px; }
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        .cards { display: flex; gap: 20px; margin-bottom: 30px; }
-        .card { padding: 20px; background: #f5f5f5; border-radius: 10px; flex: 1; }
-
-        .charts { display: flex; gap: 40px; margin-top: 40px; }
-        .charts-column { margin-top: 40px; }
-
-        canvas {
-            background: #fff;
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        ul { margin-top: 20px; }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/style-dashboard.css' %}">    
 </head>
 
 <body>
 
 <h1>Dashboard</h1>
 
-<!--  METRICS -->
+<!-- METRICS -->
 <div class="cards">
-    <div class="card">Total: {{ total }}</div>
-    <div class="card">Completed: {{ completed }}</div>
-    <div class="card">Pending: {{ pending }}</div>
-    <div class="card">Overdue: {{ overdue }}</div>
+    <div class="card total">Total: {{ total }}</div>
+    <div class="card completed">Completed: {{ completed }}</div>
+    <div class="card pending">Pending: {{ pending }}</div>
+    <div class="card overdue">Overdue: {{ overdue }}</div>
 </div>
 
-<!-- SMART FEATURES -->
+<!-- SMART -->
 <div class="cards">
     <div class="card">Completion Rate: {{ completion_rate }}%</div>
     <div class="card">Completed Today: {{ today_completed }}</div>
 </div>
+
 <h2>Smart Insights</h2>
+<div class="cards">
+    <div class="card">Due Today: {{ due_today }}</div>
+    <div class="card">Due This Week: {{ due_this_week }}</div>
+    <div class="card">High Priority: {{ high_priority_pending }}</div>
+    <div class="card">This Week: {{ this_week }}</div>
+    <div class="card">Last Week: {{ last_week }}</div>
+</div>
 
-<p>Tasks Due Today: {{ due_today }}</p>
-<p>Tasks Due This Week: {{ due_this_week }}</p>
-<p>High Priority Pending: {{ high_priority_pending }}</p>
-
-<p>Tasks This Week: {{ this_week }}</p>
-<p>Tasks Last Week: {{ last_week }}</p>
-
-<p>Top Category:
-    {% if top_category %}
-        {{ top_category.category__name }} ({{ top_category.count }})
-    {% else %}
-        No data
-    {% endif %}
-</p>
+<div class="cards">
+    <div class="card">
+        Top Category:
+        {% if top_category %}
+            {{ top_category.category__name }} ({{ top_category.count }})
+        {% else %}
+            No data
+        {% endif %}
+    </div>
+</div>
 
 <!-- LINE CHART -->
 <h2>Tasks Created Over Time</h2>
@@ -70,93 +65,112 @@
     <canvas id="priorityChart"></canvas>
 </div>
 
-<!-- UPCOMING TASKS -->
+<!-- UPCOMING -->
 <h2>Upcoming Tasks</h2>
 <ul>
     {% for task in upcoming %}
-        <li>
-            {{ task.title }} - {{ task.due_date }}
-        </li>
+        <li>{{ task.title }} - {{ task.due_date }}</li>
     {% empty %}
         <li>No upcoming tasks</li>
     {% endfor %}
 </ul>
 
 <script>
+/* ---------- LINE CHART ---------- */
+const timeLabels = [
+    {% for item in tasks_over_time %}
+        "{{ item.date }}",
+    {% endfor %}
+];
 
-    // LINE CHART (Tasks Over Time)
-     const timeLabels = [
-        {% for item in tasks_over_time %}
-            "{{ item.date }}",
-        {% endfor %}
-    ];
+const timeCounts = [
+    {% for item in tasks_over_time %}
+        {{ item.count }},
+    {% endfor %}
+];
 
-    const timeCounts = [
-        {% for item in tasks_over_time %}
-            {{ item.count }},
-        {% endfor %}
-    ];
+new Chart(document.getElementById('timeChart'), {
+    type: 'line',
+    data: {
+        labels: timeLabels,
+        datasets: [{
+            label: 'Tasks Created',
+            data: timeCounts,
+            borderColor: '#4f46e5',
+            backgroundColor: 'rgba(79,70,229,0.1)',
+            fill: true,
+            tension: 0.3
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        devicePixelRatio: window.devicePixelRatio || 2
+    }
+});
 
-    new Chart(document.getElementById('timeChart'), {
-        type: 'line',
-        data: {
-            labels: timeLabels,
-            datasets: [{
-                label: 'Tasks Created',
-                data: timeCounts,
-                fill: false,
-                tension: 0.3
-            }]
-        }
-    });
+/* ---------- CATEGORY CHART ---------- */
+const categoryLabels = [
+    {% for item in category_data %}
+        "{{ item.category__name|default:'Uncategorized' }}",
+    {% endfor %}
+];
 
-    //  CATEGORY CHART
-    const categoryLabels = [
-        {% for item in category_data %}
-            "{{ item.category__name|default:'Uncategorized' }}",
-        {% endfor %}
-    ];
+const categoryCounts = [
+    {% for item in category_data %}
+        {{ item.count }},
+    {% endfor %}
+];
 
-    const categoryCounts = [
-        {% for item in category_data %}
-            {{ item.count }},
-        {% endfor %}
-    ];
+new Chart(document.getElementById('categoryChart'), {
+    type: 'pie',
+    data: {
+        labels: categoryLabels,
+        datasets: [{
+            data: categoryCounts,
+            backgroundColor: [
+                '#4f46e5',
+                '#16a34a',
+                '#f59e0b',
+                '#dc2626',
+                '#0ea5e9'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
 
-    new Chart(document.getElementById('categoryChart'), {
-        type: 'pie',
-        data: {
-            labels: categoryLabels,
-            datasets: [{
-                data: categoryCounts
-            }]
-        }
-    });
+/* ---------- PRIORITY CHART ---------- */
+const priorityLabels = [
+    {% for item in priority_data %}
+        "{% if item.priority == 'L' %}Low{% elif item.priority == 'M' %}Medium{% else %}High{% endif %}",
+    {% endfor %}
+];
 
-    // PRIORITY CHART    
-    const priorityLabels = [
-        {% for item in priority_data %}
-            "{% if item.priority == 'L' %}Low{% elif item.priority == 'M' %}Medium{% else %}High{% endif %}",
-        {% endfor %}
-    ];
+const priorityCounts = [
+    {% for item in priority_data %}
+        {{ item.count }},
+    {% endfor %}
+];
 
-    const priorityCounts = [
-        {% for item in priority_data %}
-            {{ item.count }},
-        {% endfor %}
-    ];
-
-    new Chart(document.getElementById('priorityChart'), {
-        type: 'bar',
-        data: {
-            labels: priorityLabels,
-            datasets: [{
-                label: 'Tasks by Priority',
-                data: priorityCounts
-            }]
-        }
-    });
-
+new Chart(document.getElementById('priorityChart'), {
+    type: 'bar',
+    data: {
+        labels: priorityLabels,
+        datasets: [{
+            label: 'Tasks by Priority',
+            data: priorityCounts,
+            backgroundColor: ['#22c55e','#f59e0b','#ef4444']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
 </script>
 
 </body>

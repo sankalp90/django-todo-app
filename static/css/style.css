@@ -182,10 +182,38 @@ body {
 .btn-delete {
     color: #e03131;
 }
+.btn-completed {
+    color: #30c187;
+}
 
 .btn-delete:hover {
     background: #ffe3e3;
 }
+.btn-completed:hover {
+    background: #e3ffe3;
+}
+
+.dashboard-btn {
+    background: none;
+    color: white;
+    padding: 8px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    border: none;
+    display: inline-block;
+    transition: all 0.25s ease;
+}
+
+/* Hover effect */
+.dashboard-btn:hover {
+    background:none;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+
 
 /* EDIT FORM */
 .edit-form {
