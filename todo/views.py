@@ -97,8 +97,16 @@ def todo_list(request):
 @login_required
 def toggle_complete(request, task_id):
     todo = get_object_or_404(Todo, id=task_id, user=request.user)
-    todo.completed = not todo.completed
-    todo.save()
+
+    if not todo.completed:
+            todo.completed = True
+            todo.completed_at = timezone.now()
+    else:
+        todo.completed = False
+        todo.completed_at = None
+    
+    todo.save() 
+
     return redirect("todo_list")  
 
 
@@ -212,7 +220,7 @@ def dashboard(request):
     # Tasks completed today
     today_completed = todos.filter(
         completed=True,
-        #created_at__date=timezone.now().date()
+        completed_at__date=now.date()
     ).count()
 
     # Upcoming tasks
@@ -232,6 +240,63 @@ def dashboard(request):
         todos.values('priority')
         .annotate(count=Count('id'))
     )
+    
+    # making dashboard cards clickable
+
+    filter_type = request.GET.get('filter')
+    filtered_tasks = None
+
+    if filter_type:
+        filtered_tasks = todos
+
+        if filter_type == 'completed':
+            filtered_tasks = todos.filter(completed=True)
+
+        elif filter_type == 'pending':
+            filtered_tasks = todos.filter(completed=False)
+
+        elif filter_type == 'overdue':
+            filtered_tasks = todos.filter(
+                completed=False,
+                due_date__lt=timezone.now()
+            )
+        elif filter_type == 'total':
+            filtered_tasks = todos
+
+        elif filter_type == 'completed_today':
+            filtered_tasks = todos.filter(
+                completed=True,
+                completed_at__date=now.date()
+            )
+
+        elif filter_type == 'due_today':
+            filtered_tasks = todos.filter(
+                due_date__date=now.date(),
+                completed=False
+            )
+
+        elif filter_type == 'due_this_week':
+            filtered_tasks = todos.filter(
+                due_date__range=(now, next_7_days),
+                completed=False
+            )
+
+        elif filter_type == 'high_priority':
+            filtered_tasks = todos.filter(
+                priority='H',
+                completed=False
+            )
+
+        elif filter_type == 'this_week':
+            filtered_tasks = todos.filter(
+                created_at__gte=now - timedelta(days=7)
+            )
+
+        elif filter_type == 'last_week':
+            filtered_tasks = todos.filter(
+                created_at__gte=now - timedelta(days=14),
+                created_at__lt=now - timedelta(days=7)
+            )
 
     context = {
         'total': total,
@@ -250,6 +315,8 @@ def dashboard(request):
         'category_data': category_data,
         'priority_data': priority_data,
         'tasks_over_time': list(tasks_over_time),
+        'filtered_tasks': filtered_tasks,
+        'active_filter': filter_type,
     }
 
     return render(request, 'dashboard.html', context)

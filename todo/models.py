@@ -33,6 +33,7 @@ class Todo(models.Model):
     )
 
     completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.title

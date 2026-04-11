@@ -21,25 +21,25 @@
 
 <!-- METRICS -->
 <div class="cards">
-    <div class="card total">Total: {{ total }}</div>
-    <div class="card completed">Completed: {{ completed }}</div>
-    <div class="card pending">Pending: {{ pending }}</div>
-    <div class="card overdue">Overdue: {{ overdue }}</div>
+    <a href="?filter=total" class="card total">Total: {{ total }}</a>
+    <a href="?filter=completed" class="card completed">Completed: {{ completed }}</a>
+    <a href="?filter=pending" class="card pending">Pending: {{ pending }}</a>
+    <a href="?filter=overdue" class="card overdue">Overdue: {{ overdue }}</a>
 </div>
 
 <!-- SMART -->
 <div class="cards">
     <div class="card">Completion Rate: {{ completion_rate }}%</div>
-    <div class="card">Completed Today: {{ today_completed }}</div>
+    <a href="?filter=completed_today" class="card completed">Completed Today: {{ today_completed }}</a>
 </div>
 
 <h2>Smart Insights</h2>
 <div class="cards">
-    <div class="card">Due Today: {{ due_today }}</div>
-    <div class="card">Due This Week: {{ due_this_week }}</div>
-    <div class="card">High Priority: {{ high_priority_pending }}</div>
-    <div class="card">This Week: {{ this_week }}</div>
-    <div class="card">Last Week: {{ last_week }}</div>
+    <a href="?filter=due_today" class="card">Due Today: {{ due_today }}</a>
+    <a href="?filter=due_this_week" class="card">Due This Week: {{ due_this_week }}</a>
+    <a href="?filter=high_priority" class="card">High Priority: {{ high_priority_pending }}</a>
+    <a href="?filter=this_week" class="card">This Week: {{ this_week }}</a>
+    <a href="?filter=last_week" class="card">Last Week: {{ last_week }}</a>
 </div>
 
 <div class="cards">
@@ -52,6 +52,18 @@
         {% endif %}
     </div>
 </div>
+
+{% if filtered_tasks %}
+    <h2>Filtered Tasks</h2>
+
+    <ul>
+        {% for task in filtered_tasks %}
+            <li>{{ task.title }} - {{ task.due_date }}</li>
+        {% empty %}
+            <li>No tasks found</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 
 <!-- LINE CHART -->
 <h2>Tasks Created Over Time</h2>
@@ -133,7 +145,7 @@ new Chart(document.getElementById('categoryChart'), {
                 '#16a34a',
                 '#f59e0b',
                 '#dc2626',
-                '#0ea5e9'
+                '#0ea5e9',
             ]
         }]
     },
@@ -172,6 +184,8 @@ new Chart(document.getElementById('priorityChart'), {
     }
 });
 </script>
+
+
 
 </body>
 </html>
